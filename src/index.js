@@ -3,8 +3,6 @@ const app = express();
 const fs = require('fs');
 const PostgresAccess = require('./postgres_access');
 
-const insertStatement = fs.readFileSync('./Postgres_Scripts/Insert_Image.sql', 'utf8');
-
 app.post('/api/UploadImage', (req, res) => {
   let imageData = Buffer.alloc(0);
   req.on('data', (chunk) => {
