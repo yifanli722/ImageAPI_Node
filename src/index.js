@@ -1,6 +1,6 @@
+const e = require('express');
 const express = require('express');
 const app = express();
-const fs = require('fs');
 const PostgresAccess = require('./postgres_access');
 
 app.post('/api/UploadImage', (req, res) => {
@@ -11,24 +11,43 @@ app.post('/api/UploadImage', (req, res) => {
 
   req.on('end', async () => {
     if (imageData.length > 0) {
-      let {result, sha256, error } = await PostgresAccess.insertImage(imageData);
-      if(result) {
+      let { sha256, err } = await PostgresAccess.insertImage(imageData);
+      if(err !== null) {
         res.json({
           sha256: sha256
         });
       } else {
-        res.status(400).send('Unable to insert image');
-        throw error;
+        res.status(500).json({
+          Error: 'Unable to insert image',
+          Trace: err.Trace
+        });
       }
     } else {
-      res.status(400).send('No image data received');
-    }
+      res.status(400).json({
+        Error: 'No image data received'
+      });
+    } 
   });
 });
 
-app.post('/api/RetrieveImage', (req, res) => {
-  
+app.get('/api/RetrieveImage/:hash', async (req, res) => {
+  var imageHash = req.params['hash'];
+  if(imageHash.length < 1) {
+    res.status(500).json({
+      Error: 'Unable to insert image',
+      Trace: err.Trace
+    });
+  }
+  let { success, imgData } = await PostgresAccess.retrieveImage(imageHash);
+  if(success) {
+    res.set('Content-Type', 'image/jpeg').send(imgData);
+  } else {
+    res.status(400).json({
+      Error: 'Implement error'
+    });
+  }
 });
+
 
 app.listen(3000, () => {
   console.log('SHA-256 endpoint listening on port 3000!');

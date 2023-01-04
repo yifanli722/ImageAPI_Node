@@ -1,2 +1,1 @@
-SELECT * FROM public.image_table
-Where img_hash_full = @img_hash_full;
+SELECT img_data FROM image_table WHERE img_hash_full = $1
