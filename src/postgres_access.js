@@ -12,20 +12,25 @@ const connectionObj = {
     database: 'yfoo',
 }
 
-async function insertImage(imageData) {
+async function insertImage(imageBytesData) {
     const client = new Client(connectionObj);
     await client.connect();
 
     const hash = crypto.createHash('sha256');
-    hash.update(imageData);
+    hash.update(imageBytesData);
     const sha256 = hash.digest('hex');
 
     const sqlQuery = {
         text: insertStatement,
-        values: [sha256, imageData],
+        values: [sha256, imageBytesData],
     };
     try {
-        await client.query(sqlQuery);
+        const result = await client.query(sqlQuery);
+        if (result.rowCount > 0) {
+            console.log('Image inserted');
+        } else {
+            console.log('Image already exists');
+        }
         return {
             sha256 : sha256,
             error : null
@@ -78,7 +83,25 @@ async function retrieveImage(sha256) {
     }
 }
 
+async function deleteImage(imgHashFull) {
+    const sql = fs.readFileSync('./Postgres_Scripts/Delete_Image.sql', 'utf-8');
+    const client = new Client(connectionObj);
+
+    try {
+        await client.connect();
+        const res = await client.query(sql, [imgHashFull]);
+        console.log(res.rowCount + ' rows deleted');
+        return res.rowCount === 0 || res.rowCount === 1;
+    } catch (err) {
+        console.error(err);
+        return false;
+    } finally {
+        client.end();
+    }
+}
+
 module.exports = {
     insertImage: insertImage,
-    retrieveImage: retrieveImage
+    retrieveImage: retrieveImage,
+    deleteImage: deleteImage
 }
