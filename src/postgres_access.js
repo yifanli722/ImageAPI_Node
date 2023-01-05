@@ -12,34 +12,31 @@ const connectionObj = {
     database: 'yfoo',
 }
 
-
-
 async function insertImage(imageData) {
+    const client = new Client(connectionObj);
     await client.connect();
 
     const hash = crypto.createHash('sha256');
     hash.update(imageData);
     const sha256 = hash.digest('hex');
 
-    const query = {
+    const sqlQuery = {
         text: insertStatement,
         values: [sha256, imageData],
     };
-    await client.query(query, (err, res) => {
-        client.end();
-        if (err) {
-            return {
-                sha256 : sha256,
-                error : err
-            };
-        }
-        console.log("hello world", res);
-    });
-
-    return {
-        sha256 : sha256,
-        error : null
-    };
+    try {
+        await client.query(sqlQuery);
+        return {
+            sha256 : sha256,
+            error : null
+        };
+    }
+    catch (err) {
+        console.error(err);
+        throw err;
+    } finally {
+        await client.end();
+    }
 }
 
 async function retrieveImage(sha256) {
