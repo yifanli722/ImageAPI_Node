@@ -14,7 +14,7 @@ app.post('/api/UploadImage', (req, res) => {
       let { sha256, err } = await PostgresAccess.insertImage(imageData);
       if(err !== null) {
         res.json({
-          sha256: sha256
+          insertedSha256: sha256
         });
       } else {
         res.status(500).json({
@@ -42,13 +42,26 @@ app.get('/api/RetrieveImage/:hash', async (req, res) => {
   if(success) {
     res.set('Content-Type', 'image/jpeg').send(imgData);
   } else {
-    res.status(400).json({
-      Error: 'Implement error'
+    res.status(404).json({
+      Error: `${imageHash} Does not exist`
     });
   }
 });
 
+app.delete('/api/DeleteImage/:hash', async (req, res) => {
+  var imageHash = req.params['hash'];
+
+  const success = await PostgresAccess.deleteImage(imageHash);
+
+  if (success) {
+    res.json({
+      deletedSha256: imageHash
+    });
+  } else {
+    res.sendStatus(500);
+  }
+});
 
 app.listen(3000, () => {
-  console.log('SHA-256 endpoint listening on port 3000!');
+  console.log('Server listening on port 3000');
 });
