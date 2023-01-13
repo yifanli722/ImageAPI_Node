@@ -1,8 +1,7 @@
 const crypto = require('crypto');
 const { Client } = require('pg');
 const fs = require('fs');
-const jpeg = require('jpeg-js');
-const png = require('pngjs').PNG;
+const sharp = require('sharp');
 
 const insertStatement = fs.readFileSync('./Postgres_Scripts/Insert_Image.sql', 'utf8');
 const retrieveStatement = fs.readFileSync('./Postgres_Scripts/Retrieve_Image.sql', 'utf8');
@@ -14,17 +13,26 @@ const connectionObj = {
     database: 'yfoo',
 }
 
-async function insertImage(imageBytesData) {
+async function insertImage(imageData) {
+    try {
+        var jpegData = await sharp(imageData).jpeg({mozjpeg: true}).toBuffer();
+    } catch (err) {
+        return {
+            sha256 : null,
+            error : err
+        };
+    }
+    
     const client = new Client(connectionObj);
     await client.connect();
 
     const hash = crypto.createHash('sha256');
-    hash.update(imageBytesData);
+    hash.update(jpegData);
     const sha256 = hash.digest('hex');
 
     const sqlQuery = {
         text: insertStatement,
-        values: [sha256, imageBytesData],
+        values: [sha256, jpegData],
     };
     try {
         const result = await client.query(sqlQuery);
@@ -40,7 +48,10 @@ async function insertImage(imageBytesData) {
     }
     catch (err) {
         console.error(err);
-        throw err;
+        return {
+            sha256 : null,
+            error : err
+        };
     } finally {
         await client.end();
     }
@@ -101,36 +112,6 @@ async function deleteImage(imgHashFull) {
         client.end();
     }
 }
-
-async function convertToJpeg(imageData) {
-  try {
-    let rawImage;
-    // Check the first 8 bytes of the image data to determine the image format
-    if (imageData.slice(0, 8).toString('hex') === 'ffd8ffe0') {
-      // The image data is a JPEG image
-      rawImage = jpeg.decode(imageData);
-    } else if (imageData.slice(0, 8).toString('hex') === '89504e47') {
-      // The image data is a PNG image
-      const pngImage = new png();
-      pngImage.parse(imageData, (error, data) => {
-        if (error) throw error;
-        rawImage = data;
-      });
-    } else {
-      // The image data is not a JPEG or PNG image
-      throw new Error('Unsupported image format');
-    }
-
-    // Encode the raw image into a JPEG image
-    const jpegImage = jpeg.encode(rawImage, { quality: 90 });
-
-    return jpegImage.data;
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-}
-
 
 module.exports = {
     insertImage: insertImage,
