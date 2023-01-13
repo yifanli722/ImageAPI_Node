@@ -14,8 +14,13 @@ By Default, api is accessible on port 3000.
 <br>Deletes a previously uploaded image
 
 ## Run Locally ##
+Run everything with Docker Compose
 ```shell
-docker-compose up
+docker compose up
 ```
 
- 
+Bring up Postgres/Pgadmin, run npm locally
+```shell
+docker compose up pdadmin
+npm start
+```
