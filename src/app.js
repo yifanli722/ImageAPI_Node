@@ -12,15 +12,14 @@ app.post('/api/UploadImage', (req, res) => {
 
   req.on('end', async () => {
     if (imageData.length > 0) {
-      let { sha256, err } = await PostgresAccess.insertImage(imageData);
-      if(err !== null) {
+      let { sha256, error } = await PostgresAccess.insertImage(imageData);
+      if(error === null) {
         res.json({
           insertedSha256: sha256
         });
       } else {
         res.status(500).json({
-          Error: 'Unable to insert image',
-          Trace: err.Trace
+          Error: error.stack
         });
       }
     } else {
