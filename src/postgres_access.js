@@ -3,14 +3,27 @@ const { Client } = require('pg');
 const fs = require('fs');
 const sharp = require('sharp');
 
+const initilizePostgresStatement = fs.readFileSync('./Postgres_Scripts/Create_Table.sql', 'utf-8')
 const insertStatement = fs.readFileSync('./Postgres_Scripts/Insert_Image.sql', 'utf8');
 const retrieveStatement = fs.readFileSync('./Postgres_Scripts/Retrieve_Image.sql', 'utf8');
+
+require('dotenv').config();
 const connectionObj = {
-    host: 'localhost',
-    port: 5432,
-    user: 'yfoo',
-    password: 'yfoo',
-    database: 'yfoo',
+    host: process.env.POSTGRES_HOST || "localhost",
+    port: Number(process.env.POSTGRES_PORT) || 5432,
+    user: process.env.POSTGRES_USER || "yfoo",
+    password: process.env.POSTGRES_PASSWORD || "yfoo",
+    database: process.env.POSTGRES_DATABASE || "yfoo",
+}
+
+async function InitilizePostgres() {
+    const client = new Client(connectionObj);
+    await client.connect();
+    const sqlQuery = {
+        text: initilizePostgresStatement
+    }
+    const result = await client.query(sqlQuery);
+    console.log("init postgres")
 }
 
 async function insertImage(imageData) {
@@ -116,5 +129,6 @@ async function deleteImage(imgHashFull) {
 module.exports = {
     insertImage: insertImage,
     retrieveImage: retrieveImage,
-    deleteImage: deleteImage
+    deleteImage: deleteImage,
+    InitilizePostgres: InitilizePostgres
 }

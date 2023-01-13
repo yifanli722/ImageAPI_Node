@@ -27,5 +27,14 @@ services:
       - postgres
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+  
+  imageApiNode:
+    container_name: ImageApiNode
+    build: .
+    image: imageapinode
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
 
 # sudo docker ps -aq | sudo xargs docker stop | sudo xargs docker rm
