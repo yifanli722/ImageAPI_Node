@@ -1,7 +1,8 @@
-const e = require('express');
 const express = require('express');
-const app = express();
+const cors = require('cors')
 const PostgresAccess = require('./postgres_access');
+const app = express();
+app.use(cors())
 
 app.post('/api/UploadImage', (req, res) => {
   let imageData = Buffer.alloc(0);
