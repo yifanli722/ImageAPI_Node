@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors')
 const PostgresAccess = require('./postgres_access');
+const postgres_access = require('./postgres_access');
 const app = express();
+
+require('dotenv').config();
 app.use(cors())
 
 app.post('/api/UploadImage', (req, res) => {
@@ -62,6 +65,14 @@ app.delete('/api/DeleteImage/:hash', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('Server listening on port 3000');
-});
+postgres_access.InitilizePostgres();
+
+if(process.env.APP_PORT !== null) {
+  app.listen(process.env.APP_PORT, () => {
+    console.log(`Server listening on port ${process.env.APP_PORT}`);
+  });
+} else {
+  app.listen(3000, () => {
+    console.log('WARNING: Did not find APP_PORT in .env, using default port of 3000');
+  });
+}
