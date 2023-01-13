@@ -14,10 +14,8 @@ By Default, api is accessible on port 3000.
 <br>Deletes a previously uploaded image
 
 ## Run Locally ##
-Navigate into ImageApi folder, Start Postgres, Start API
 ```shell
 docker-compose up
-npm start
 ```
 
  
