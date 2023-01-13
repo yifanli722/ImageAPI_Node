@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { Client } = require('pg');
 const fs = require('fs');
+const sharp = require('sharp');
 
 const insertStatement = fs.readFileSync('./Postgres_Scripts/Insert_Image.sql', 'utf8');
 const retrieveStatement = fs.readFileSync('./Postgres_Scripts/Retrieve_Image.sql', 'utf8');
@@ -12,17 +13,26 @@ const connectionObj = {
     database: 'yfoo',
 }
 
-async function insertImage(imageBytesData) {
+async function insertImage(imageData) {
+    try {
+        var jpegData = await sharp(imageData).jpeg({mozjpeg: true}).toBuffer();
+    } catch (err) {
+        return {
+            sha256 : null,
+            error : err
+        };
+    }
+    
     const client = new Client(connectionObj);
     await client.connect();
 
     const hash = crypto.createHash('sha256');
-    hash.update(imageBytesData);
+    hash.update(jpegData);
     const sha256 = hash.digest('hex');
 
     const sqlQuery = {
         text: insertStatement,
-        values: [sha256, imageBytesData],
+        values: [sha256, jpegData],
     };
     try {
         const result = await client.query(sqlQuery);
@@ -38,7 +48,10 @@ async function insertImage(imageBytesData) {
     }
     catch (err) {
         console.error(err);
-        throw err;
+        return {
+            sha256 : null,
+            error : err
+        };
     } finally {
         await client.end();
     }
