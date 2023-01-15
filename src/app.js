@@ -41,22 +41,12 @@ app.get('/api/RetrieveImage/:hash', async (req, res) => {
       Trace: err.Trace
     });
   }
-  let { success, imgData } = await PostgresAccess.retrieveMedia(imageHash);
+  let { success, mediaData, type, error, returnCode } = await PostgresAccess.retrieveMedia(imageHash);
   if(success) {
-    const webmHeader = new Uint8Array([26, 69, 223, 163])
-    let isWebm = true;
-    for(let i = 0; i < 4; i++) {
-        if(imgData[i] !== webmHeader[i]){
-            isWebm = false;
-            break;
-        }
-    }
-
-    const mimetype = isWebm ? 'video/webm' : 'image/webp'
-    res.set('Content-Type', mimetype).send(imgData);
+    res.set('Content-Type', type).send(mediaData);
   } else {
-    res.status(404).json({
-      Error: `${imageHash} Does not exist`
+    res.status(returnCode).json({
+      Error: error
     });
   }
 });
