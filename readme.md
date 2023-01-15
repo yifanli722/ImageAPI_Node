@@ -21,6 +21,6 @@ docker compose up
 
 Bring up Postgres/Pgadmin, run npm locally
 ```shell
-docker compose up pdadmin
+docker compose up pgadmin
 npm start
 ```
