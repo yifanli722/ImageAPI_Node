@@ -26,33 +26,45 @@ async function InitilizePostgres() {
     console.log("init postgres")
 }
 
-async function insertImage(imageData) {
-    try {
-        var jpegData = await sharp(imageData).jpeg({mozjpeg: true}).toBuffer();
-    } catch (err) {
-        return {
-            sha256 : null,
-            error : err
-        };
+async function insertMedia(mediaData) {
+    const webmHeader = new Uint8Array([26, 69, 223, 163])
+    let isWebm = true;
+    for(let i = 0; i < 4; i++) {
+        if(mediaData[i] !== webmHeader[i]){
+            isWebm = false;
+            break;
+        }
     }
-    
+    if(isWebm) {
+        var dataToInsert = mediaData;
+    } else {
+        try {
+            var dataToInsert = await sharp(mediaData).webp().toBuffer();
+        } catch (err) {
+            return {
+                sha256 : null,
+                error : err
+            };
+        }
+    }
+
     const client = new Client(connectionObj);
     await client.connect();
 
-    const hash = crypto.createHash('sha256');
-    hash.update(jpegData);
-    const sha256 = hash.digest('hex');
+    const hasher = crypto.createHash('sha256');
+    hasher.update(dataToInsert);
+    const sha256 = hasher.digest('hex');
 
     const sqlQuery = {
         text: insertStatement,
-        values: [sha256, jpegData],
+        values: [sha256, dataToInsert],
     };
     try {
         const result = await client.query(sqlQuery);
         if (result.rowCount > 0) {
-            console.log('Image inserted');
+            console.log(`Inserted: ${sha256}`);
         } else {
-            console.log('Image already exists');
+            console.log(`${sha256} already exists`);
         }
         return {
             sha256 : sha256,
@@ -70,7 +82,7 @@ async function insertImage(imageData) {
     }
 }
 
-async function retrieveImage(sha256) {
+async function retrieveMedia(sha256) {
     const client = new Client(connectionObj);
     await client.connect();
 
@@ -127,8 +139,8 @@ async function deleteImage(imgHashFull) {
 }
 
 module.exports = {
-    insertImage: insertImage,
-    retrieveImage: retrieveImage,
+    insertMedia: insertMedia,
+    retrieveMedia: retrieveMedia,
     deleteImage: deleteImage,
     InitilizePostgres: InitilizePostgres
 }
