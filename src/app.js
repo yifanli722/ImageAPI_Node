@@ -15,7 +15,7 @@ app.post('/api/UploadImage', (req, res) => {
 
   req.on('end', async () => {
     if (imageData.length > 0) {
-      let { sha256, error } = await PostgresAccess.insertImage(imageData);
+      let { sha256, error } = await PostgresAccess.insertMedia(imageData);
       if(error === null) {
         res.json({
           insertedSha256: sha256
@@ -41,12 +41,12 @@ app.get('/api/RetrieveImage/:hash', async (req, res) => {
       Trace: err.Trace
     });
   }
-  let { success, imgData } = await PostgresAccess.retrieveImage(imageHash);
+  let { success, mediaData, type, error, returnCode } = await PostgresAccess.retrieveMedia(imageHash);
   if(success) {
-    res.set('Content-Type', 'image/jpeg').send(imgData);
+    res.set('Content-Type', type).send(mediaData);
   } else {
-    res.status(404).json({
-      Error: `${imageHash} Does not exist`
+    res.status(returnCode).json({
+      Error: error
     });
   }
 });
