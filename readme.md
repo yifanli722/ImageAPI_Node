@@ -24,3 +24,17 @@ Bring up Postgres/Pgadmin, run npm locally
 docker compose up pgadmin
 npm start
 ```
+
+## Credentials ##
+PgAdmin
+<br>
+User: yfoo@yfoo.com
+<br>
+Password: yfoo
+
+<br>
+Postgres
+<br>
+User: yfoo
+<br>
+Password: yfoo
